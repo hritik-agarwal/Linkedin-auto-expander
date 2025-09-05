@@ -14,3 +14,7 @@ The extension works automatically once installed. It will:
 - Monitor for new posts and comments as you scroll
 - Automatically click "...more" buttons to expand content
 - Work on both the main feed and individual post pages
+
+## Privacy Policy
+
+View the privacy policy at this [link](https://hritik-agarwal.github.io/linkedin-auto-expander/privacy-policy.html).
