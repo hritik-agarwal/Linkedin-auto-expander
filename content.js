@@ -25,10 +25,14 @@ async function setDB(key, value) {
 function clickAllMoreButtons() {
   Array.from(document.querySelectorAll("button"))
     .filter((btn) => {
-      const spans = btn.querySelectorAll("span");
-      if (spans.length !== 1) return false;
-      const text = spans[0].innerText.trim().toLowerCase();
-      return text === "…more" || text === "… show more";
+      const text = btn.innerText.trim().toLowerCase();
+      return new Set([
+        "…more",
+        "…show more",
+        "… show more",
+        "…see more",
+        "… see more",
+      ]).has(text);
     })
     .forEach((btn) => {
       const postContainer = btn.closest("div, span");

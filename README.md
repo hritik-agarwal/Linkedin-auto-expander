@@ -6,7 +6,6 @@ A simple Chrome extension to enhance your LinkedIn experience.
 
 - Expands posts and comments automatically
 - Dark mode enable
-- Works on all LinkedIn pages
 
 ## Privacy Policy
 
