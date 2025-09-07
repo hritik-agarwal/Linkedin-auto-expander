@@ -1,128 +1,101 @@
-const TOGGLE_BUTTON_ID = "toggle-button";
-const EXPAND_ALL_BUTTON_ID = "expand-all";
-const STATUS_TEXT_ID = "status-text";
+// Constants
 
-class PopupController {
-  constructor() {
-    this.isEnabled = true;
-    this.init();
-  }
+const IDS = {
+  STATUS_TEXT: "status-text",
+  EXPAND_BTN: "expand-btn",
+  DARK_MODE_BTN: "dark-mode-btn",
+};
 
-  async init() {
-    await this.loadState();
-    this.setupEventListeners();
-    this.updateUI();
-  }
+const MESSAGES = {
+  ENABLE_EXPAND: "enable-expand",
+};
 
-  async loadState() {
-    try {
-      const result = await chrome.storage.local.get(["isEnabled"]);
-      this.isEnabled = result.isEnabled !== undefined ? result.isEnabled : true;
-    } catch (error) {
-      this.isEnabled = true;
-    }
-  }
+const DB = {
+  ENABLE_EXPAND: "enableExpand",
+};
 
-  async saveState() {
-    try {
-      await chrome.storage.local.set({ isEnabled: this.isEnabled });
-    } catch (error) {}
-  }
+// Functions
 
-  setupEventListeners() {
-    const toggleButton = document.getElementById(TOGGLE_BUTTON_ID);
-    const expandAllButton = document.getElementById(EXPAND_ALL_BUTTON_ID);
+async function getDB(keys) {
+  return await chrome.storage.local.get(keys);
+}
 
-    if (toggleButton) {
-      toggleButton.addEventListener("click", () => this.toggleExtension());
-    }
+async function setDB(key, value) {
+  await chrome.storage.local.set({ [key]: value });
+}
 
-    if (expandAllButton) {
-      expandAllButton.addEventListener("click", () => this.expandAll());
-    }
-  }
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab.url.includes("linkedin.com")) return null;
+  return tab;
+}
 
-  async toggleExtension() {
-    try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
+async function getCookie(name) {
+  const tab = await getCurrentTab();
+  if (!tab) return;
+  return await chrome.cookies.get({ url: tab.url, name });
+}
 
-      if (!tab.url.includes("linkedin.com")) {
-        this.updateStatus("Please navigate to LinkedIn first", false);
-        return;
-      }
-
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        action: "toggle",
-      });
-
-      if (response && response.enabled !== undefined) {
-        this.isEnabled = response.enabled;
-        await this.saveState();
-        this.updateUI();
-      }
-    } catch (error) {
-      this.updateStatus("Error: Please refresh the page", false);
-    }
-  }
-
-  async expandAll() {
-    try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-
-      if (!tab.url.includes("linkedin.com")) {
-        this.updateStatus("Please navigate to LinkedIn first", false);
-        return;
-      }
-
-      await chrome.tabs.sendMessage(tab.id, {
-        action: "expandAll",
-      });
-
-      this.updateStatus("Expanding all posts...", true);
-
-      setTimeout(() => {
-        this.updateUI();
-      }, 2000);
-    } catch (error) {
-      this.updateStatus("Error: Please refresh the page", false);
-    }
-  }
-
-  updateUI() {
-    const toggleButton = document.getElementById(TOGGLE_BUTTON_ID);
-    const statusText = document.getElementById(STATUS_TEXT_ID);
-
-    if (toggleButton) {
-      toggleButton.textContent = this.isEnabled ? "Disable" : "Enable";
-      toggleButton.className = this.isEnabled
-        ? "btn btn-danger"
-        : "btn btn-success";
-    }
-
-    if (statusText) {
-      statusText.textContent = this.isEnabled
-        ? "Auto-expand is ON"
-        : "Auto-expand is OFF";
-      statusText.className = this.isEnabled ? "text-success" : "text-danger";
-      statusText.style.marginBottom = "10px";
-    }
-  }
-
-  updateStatus(message, isSuccess) {
-    const statusText = document.getElementById(STATUS_TEXT_ID);
-    if (statusText) {
-      statusText.textContent = message;
-      statusText.className = isSuccess ? "text-success" : "text-danger";
-    }
+async function setCookie(name, value) {
+  const tab = await getCurrentTab();
+  if (!tab) return;
+  for (const domain of [".linkedin.com", ".www.linkedin.com"]) {
+    await chrome.cookies.set({ url: tab.url, name, value, domain, path: "/" });
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  new PopupController();
+async function sendMsg(action) {
+  const tab = await getCurrentTab();
+  if (!tab) return;
+  return await chrome.tabs.sendMessage(tab.id, { action });
+}
+
+async function reloadPage() {
+  const tab = await getCurrentTab();
+  if (!tab) return;
+  await chrome.tabs.reload(tab.id);
+}
+
+async function enableExpandHelper() {
+  const result = await getDB([DB.ENABLE_EXPAND]);
+  const isExpandEnabled = result[DB.ENABLE_EXPAND] != false;
+  await setDB(DB.ENABLE_EXPAND, !isExpandEnabled);
+  document.getElementById(IDS.EXPAND_BTN).className = !isExpandEnabled
+    ? "btn primary"
+    : "btn secondary";
+  await sendMsg(MESSAGES.ENABLE_EXPAND);
+}
+
+async function enableDarkMode() {
+  const cookie = await getCookie("li_theme");
+  const currentTheme = cookie ? cookie.value : "light";
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  await setCookie("li_theme", newTheme);
+  document.getElementById(IDS.DARK_MODE_BTN).className =
+    newTheme == "light" ? "btn secondary" : "btn primary";
+  setTimeout(reloadPage, 1000);
+}
+
+async function updateUI() {
+  const result = await getDB([DB.ENABLE_EXPAND]);
+  const isExpandEnabled = result[DB.ENABLE_EXPAND] != false;
+  document.getElementById(IDS.EXPAND_BTN).className = isExpandEnabled
+    ? "btn primary"
+    : "btn secondary";
+  const cookie = await getCookie("li_theme");
+  const currentTheme = cookie ? cookie.value : "light";
+  document.getElementById(IDS.DARK_MODE_BTN).className =
+    currentTheme == "light" ? "btn secondary" : "btn primary";
+}
+
+// Listeners
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await updateUI();
+  document
+    .getElementById(IDS.EXPAND_BTN)
+    .addEventListener("click", enableExpandHelper);
+  document
+    .getElementById(IDS.DARK_MODE_BTN)
+    .addEventListener("click", enableDarkMode);
 });

@@ -1,19 +1,12 @@
-# LinkedIn Auto Expander
+# LinkedIn Enhancer
 
-A Chrome extension that automatically expands LinkedIn posts and comments by clicking "...more" buttons.
+A simple Chrome extension to enhance your LinkedIn experience.
 
 ## Features
 
-- Automatically expands truncated LinkedIn posts and comments
-- Works on LinkedIn feed and profile pages
-- Lightweight and non-intrusive
-
-## Usage
-
-The extension works automatically once installed. It will:
-- Monitor for new posts and comments as you scroll
-- Automatically click "...more" buttons to expand content
-- Work on both the main feed and individual post pages
+- Expands posts and comments automatically
+- Dark mode enable
+- Works on all LinkedIn pages
 
 ## Privacy Policy
 

@@ -1,11 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Auto Expander",
-  "version": "1.0.0",
-  "description": "Automatically expands LinkedIn posts and comments by clicking '...more' buttons",
+  "name": "LinkedIn Enhancer",
+  "version": "2.0.0",
+  "description": "Enhance your LinkedIn experience with productivity and usability improvements",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*.linkedin.com/*"
   ],
   "content_scripts": [
     {
@@ -24,6 +28,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "LinkedIn Auto Expander"
+    "default_title": "LinkedIn Enhancer"
   }
 }

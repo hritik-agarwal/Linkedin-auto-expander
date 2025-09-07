@@ -1,81 +1,79 @@
-class LinkedInAutoExpander {
-  constructor() {
-    this.observer = null;
-    this.isEnabled = true;
-    this.init();
-  }
+// Constants
 
-  async init() {
-    const result = await chrome.storage.local.get(["isEnabled"]);
-    this.isEnabled = result.isEnabled !== undefined ? result.isEnabled : true;
-    if (!this.isEnabled) return;
-    this.setupMutationObserver();
-  }
+const MESSAGES = {
+  ENABLE_EXPAND: "enable-expand",
+};
 
-  destroyObserver() {
-    if (this.observer) {
-      this.observer.disconnect();
-      this.observer = null;
-    }
-  }
+const DB = {
+  ENABLE_EXPAND: "enableExpand",
+};
 
-  setupMutationObserver() {
-    this.destroyObserver();
-    this.observer = new MutationObserver((mutations) => {
-      if (!this.isEnabled) return;
-      mutations.forEach((mutation) => {
-        if (mutation.type === "childList") {
-          mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              this.clickAllMoreButtons();
-            }
-          });
-        }
-      });
-    });
-    this.observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-    this.clickAllMoreButtons();
-  }
+// Variables
 
-  clickAllMoreButtons() {
-    Array.from(document.querySelectorAll("button"))
-      .filter((btn) => {
-        const spans = btn.querySelectorAll("span");
-        if (spans.length !== 1) return false;
-        const text = spans[0].innerText.trim().toLowerCase();
-        return text === "…more" || text === "… show more";
-      })
-      .forEach((btn) => {
-        const postContainer = btn.closest("div, span");
-        if (postContainer) postContainer.style.outline = "none";
-        btn.click();
-      });
-  }
+let observer = null;
 
-  async toggle() {
-    this.isEnabled = !this.isEnabled;
-    await chrome.storage.local.set({ isEnabled: this.isEnabled });
-    if (this.isEnabled) this.setupMutationObserver();
-    else this.destroyObserver();
-    return this.isEnabled;
-  }
+// Functions
+
+async function getDB(keys) {
+  return await chrome.storage.local.get(keys);
 }
 
-const autoExpander = new LinkedInAutoExpander();
+async function setDB(key, value) {
+  await chrome.storage.local.set({ [key]: value });
+}
 
-chrome.runtime.onMessage.addListener((request, _, sendResponse) => {
-  if (request.action === "toggle") {
-    autoExpander.toggle().then((isEnabled) => {
-      sendResponse({ enabled: isEnabled });
+function clickAllMoreButtons() {
+  Array.from(document.querySelectorAll("button"))
+    .filter((btn) => {
+      const spans = btn.querySelectorAll("span");
+      if (spans.length !== 1) return false;
+      const text = spans[0].innerText.trim().toLowerCase();
+      return text === "…more" || text === "… show more";
+    })
+    .forEach((btn) => {
+      const postContainer = btn.closest("div, span");
+      if (postContainer) postContainer.style.outline = "none";
+      btn.click();
     });
-    return true;
-  }
+}
 
-  if (request.action === "expandAll") {
-    autoExpander.clickAllMoreButtons();
-    sendResponse({ success: true });
+function setupMutationObserver(enableExpand) {
+  if (observer) {
+    observer.disconnect();
+    observer = null;
+  }
+  if (!enableExpand) return;
+  observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === "childList") {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            clickAllMoreButtons();
+          }
+        });
+      }
+    });
+  });
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
+  clickAllMoreButtons();
+}
+
+async function rerunExpandHelper() {
+  const result = await getDB([DB.ENABLE_EXPAND]);
+  const isExpandEnabled = result[DB.ENABLE_EXPAND] != false;
+  console.log({ isExpandEnabled });
+  setupMutationObserver(isExpandEnabled);
+}
+
+// Listeners
+
+rerunExpandHelper();
+
+chrome.runtime.onMessage.addListener((request, _) => {
+  if (request.action === MESSAGES.ENABLE_EXPAND) {
+    rerunExpandHelper();
   }
 });
