@@ -13,4 +13,4 @@ Perfect for LinkedIn power users who want seamless content expansion! 💼
 
 ## Privacy Policy
 
-View the privacy policy at this [link](https://hritik-agarwal.github.io/Linkedin-auto-expander/privacy-policy.html).
+View the privacy policy at this [link](https://hritik-agarwal.github.io/Linkedin-smart-expander/privacy-policy.html).
