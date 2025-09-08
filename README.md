@@ -1,11 +1,15 @@
-# LinkedIn Enhancer
+# 🚀 LinkedIn Smart Expander
 
-A simple Chrome extension to enhance your LinkedIn experience.
+Intelligently expands LinkedIn posts and comments when they enter your reading zone! 📖✨
 
-## Features
+No more clicking "...more" buttons - this extension does it smartly! 🎯
 
-- Expands posts and comments automatically
-- Dark mode enable
+* 🎯 Only expands content in your reading zone (30-70% of screen)
+* ⏱️ 1-1.5 second delays for human-like behavior  
+* 📜 Won't expand content you've scrolled past
+* ⚡ Works automatically - no settings needed
+
+Perfect for LinkedIn power users who want seamless content expansion! 💼
 
 ## Privacy Policy
 

@@ -1,83 +1,105 @@
-// Constants
-
-const MESSAGES = {
-  ENABLE_EXPAND: "enable-expand",
-};
-
-const DB = {
-  ENABLE_EXPAND: "enableExpand",
-};
-
 // Variables
 
-let observer = null;
+let intersectionObserver = null;
+let lastClickTime = 0;
+let clickThrottleDelay = 1000;
 
 // Functions
 
-async function getDB(keys) {
-  return await chrome.storage.local.get(keys);
+function isMoreButton(btn) {
+  const text = btn.innerText.trim().toLowerCase();
+  return new Set([
+    "…more",
+    "…show more",
+    "… show more",
+    "…see more",
+    "… see more",
+  ]).has(text);
 }
 
-async function setDB(key, value) {
-  await chrome.storage.local.set({ [key]: value });
+function isButtonInViewport(btn) {
+  const rect = btn.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  const windowWidth = window.innerWidth;
+  const topThreshold = windowHeight * 0.3;
+  const bottomThreshold = windowHeight * 0.7;
+  return (
+    rect.top >= topThreshold &&
+    rect.bottom <= bottomThreshold &&
+    rect.left >= 0 &&
+    rect.right <= windowWidth
+  );
 }
 
-function clickAllMoreButtons() {
-  Array.from(document.querySelectorAll("button"))
-    .filter((btn) => {
-      const text = btn.innerText.trim().toLowerCase();
-      return new Set([
-        "…more",
-        "…show more",
-        "… show more",
-        "…see more",
-        "… see more",
-      ]).has(text);
-    })
-    .forEach((btn) => {
-      const postContainer = btn.closest("div, span");
-      if (postContainer) postContainer.style.outline = "none";
-      btn.click();
-    });
+function clickButton(btn) {
+  const now = Date.now();
+  if (now - lastClickTime < clickThrottleDelay) return;
+  const postContainer = btn.closest("div, span");
+  if (postContainer) postContainer.style.outline = "none";
+  btn.click();
+  lastClickTime = now;
 }
 
-function setupMutationObserver(enableExpand) {
-  if (observer) {
-    observer.disconnect();
-    observer = null;
+function setupIntersectionObserver() {
+  if (intersectionObserver) {
+    intersectionObserver.disconnect();
+    intersectionObserver = null;
   }
-  if (!enableExpand) return;
-  observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === "childList") {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            clickAllMoreButtons();
+  intersectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && isMoreButton(entry.target)) {
+          setTimeout(() => {
+            if (isButtonInViewport(entry.target)) {
+              clickButton(entry.target);
+              intersectionObserver.unobserve(entry.target);
+            }
+          }, 1000 + Math.random() * 500);
+        }
+      });
+    },
+    {
+      root: null,
+      rootMargin: "-30% 0px -30% 0px",
+      threshold: 0.1,
+    }
+  );
+  observeExistingButtons();
+}
+
+function observeExistingButtons() {
+  const buttons = Array.from(document.querySelectorAll("button"));
+  buttons.forEach((btn) => {
+    if (isMoreButton(btn)) intersectionObserver.observe(btn);
+  });
+}
+
+function startScrollBasedScan() {
+  let scrollTimeout;
+  window.addEventListener("scroll", () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      if (intersectionObserver) {
+        const buttons = Array.from(document.querySelectorAll("button"));
+        buttons.forEach((btn) => {
+          if (isMoreButton(btn)) {
+            const isObserved = btn.hasAttribute(
+              "data-linkedin-enhancer-observed"
+            );
+            if (!isObserved) {
+              btn.setAttribute("data-linkedin-enhancer-observed", "true");
+              intersectionObserver.observe(btn);
+            }
           }
         });
       }
-    });
+    }, 1000);
   });
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-  clickAllMoreButtons();
 }
 
-async function rerunExpandHelper() {
-  const result = await getDB([DB.ENABLE_EXPAND]);
-  const isExpandEnabled = result[DB.ENABLE_EXPAND] != false;
-  console.log({ isExpandEnabled });
-  setupMutationObserver(isExpandEnabled);
+async function initializeSmartExpander() {
+  setupIntersectionObserver();
+  startScrollBasedScan();
 }
 
-// Listeners
-
-rerunExpandHelper();
-
-chrome.runtime.onMessage.addListener((request, _) => {
-  if (request.action === MESSAGES.ENABLE_EXPAND) {
-    rerunExpandHelper();
-  }
-});
+initializeSmartExpander();

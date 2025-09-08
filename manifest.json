@@ -1,12 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "LinkedIn Enhancer",
+  "name": "LinkedIn Smart Expander",
   "version": "2.0.0",
-  "description": "Enhance your LinkedIn experience with productivity and usability improvements",
+  "description": "Intelligently expands LinkedIn posts and comments when they enter your reading zone",
   "permissions": [
-    "activeTab",
-    "storage",
-    "cookies"
+    "activeTab"
   ],
   "host_permissions": [
     "*://*.linkedin.com/*"
@@ -28,6 +26,6 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "LinkedIn Enhancer"
+    "default_title": "LinkedIn Smart Expander"
   }
 }

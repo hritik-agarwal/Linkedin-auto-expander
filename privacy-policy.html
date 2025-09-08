@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - LinkedIn Auto Expander</title>
+    <title>Privacy Policy - LinkedIn Smart Expander</title>
     <style>
         body {
+            width: 100% !important;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 0 auto !important;
             padding: 20px;
             color: #333;
         }
@@ -36,24 +37,26 @@
     </style>
 </head>
 <body>
-    <h1>Privacy Policy for LinkedIn Auto Expander</h1>
+    <h1>Privacy Policy for LinkedIn Smart Expander</h1>
     <p class="last-updated">Last updated: September 2025</p>
 
     <h2>Overview</h2>
-    <p>LinkedIn Auto Expander is a Chrome extension that automatically expands truncated LinkedIn posts and comments. This privacy policy explains how we handle your data when you use our extension.</p>
+    <p>LinkedIn Smart Expander is a Chrome extension that intelligently expands truncated LinkedIn posts and comments when they enter your reading zone. The extension uses smart viewport detection to only expand content when it's in the optimal reading area (30-70% of your screen) with natural timing. This privacy policy explains how we handle your data when you use our extension.</p>
 
     <h2>Data Collection</h2>
     <p><strong>We do not collect, store, or transmit any personal data.</strong> The extension operates entirely locally on your device and does not communicate with any external servers.</p>
 
     <h2>Permissions Used</h2>
     <ul>
-        <li><strong>activeTab:</strong> Allows the extension to access the currently active LinkedIn tab to detect and expand truncated content.</li>
-        <li><strong>storage:</strong> Used to remember your preference for enabling/disabling the extension. This data is stored locally on your device only.</li>
+        <li><strong>activeTab:</strong> Allows the extension to access the currently active LinkedIn tab to detect and expand truncated content using smart viewport detection.</li>
         <li><strong>linkedin.com access:</strong> Required to function on LinkedIn pages where the extension operates.</li>
     </ul>
 
-    <h2>Local Storage</h2>
-    <p>The extension uses Chrome's local storage to save your preference for enabling or disabling the auto-expand functionality. This setting is stored locally on your device and is not transmitted anywhere.</p>
+    <h2>No Data Storage</h2>
+    <p>The extension does not store any data or preferences. It works automatically without requiring any user settings or data storage.</p>
+
+    <h2>Smart Viewport Detection</h2>
+    <p>The extension uses the Intersection Observer API to intelligently detect when "more" buttons enter your reading zone (30-70% of your screen). This technology operates entirely within your browser and does not collect or transmit any data. The extension only interacts with content that is currently visible in your viewport.</p>
 
     <h2>Third-Party Services</h2>
     <p>This extension does not use any third-party analytics, tracking, or advertising services. It does not communicate with any external servers or services.</p>
