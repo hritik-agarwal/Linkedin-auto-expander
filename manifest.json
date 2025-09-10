@@ -3,9 +3,7 @@
   "name": "LinkedIn Smart Expander",
   "version": "2.0.0",
   "description": "Intelligently expands LinkedIn posts and comments when they enter your reading zone",
-  "permissions": [
-    "activeTab"
-  ],
+  "permissions": [],
   "host_permissions": [
     "*://*.linkedin.com/*"
   ],

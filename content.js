@@ -17,11 +17,25 @@ function isMoreButton(btn) {
   ]).has(text);
 }
 
+function isClickableMoreButton(btn) {
+  if (!isMoreButton(btn)) return false;
+  if (btn.closest("a[href]")) return false;
+  const role = btn.getAttribute("role");
+  const typeAttr = btn.getAttribute("type");
+  if (
+    (role && role.toLowerCase() === "link") ||
+    (typeAttr && typeAttr.toLowerCase() === "link")
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function isButtonInViewport(btn) {
   const rect = btn.getBoundingClientRect();
   const windowHeight = window.innerHeight;
   const windowWidth = window.innerWidth;
-  const topThreshold = windowHeight * 0.3;
+  const topThreshold = windowHeight * 0.15;
   const bottomThreshold = windowHeight * 0.7;
   return (
     rect.top >= topThreshold &&
@@ -33,11 +47,12 @@ function isButtonInViewport(btn) {
 
 function clickButton(btn) {
   const now = Date.now();
-  if (now - lastClickTime < clickThrottleDelay) return;
+  if (now - lastClickTime < clickThrottleDelay) return false;
   const postContainer = btn.closest("div, span");
   if (postContainer) postContainer.style.outline = "none";
   btn.click();
   lastClickTime = now;
+  return true;
 }
 
 function setupIntersectionObserver() {
@@ -48,19 +63,19 @@ function setupIntersectionObserver() {
   intersectionObserver = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && isMoreButton(entry.target)) {
-          setTimeout(() => {
-            if (isButtonInViewport(entry.target)) {
-              clickButton(entry.target);
-              intersectionObserver.unobserve(entry.target);
-            }
-          }, 1000 + Math.random() * 500);
-        }
+        const btn = entry.target;
+        if (!entry.isIntersecting || !isClickableMoreButton(btn)) return;
+        setTimeout(() => {
+          if (!isButtonInViewport(btn)) return;
+          const clicked = clickButton(btn);
+          if (!clicked) return;
+          intersectionObserver.unobserve(btn);
+        }, 1000 + Math.random() * 300);
       });
     },
     {
       root: null,
-      rootMargin: "-30% 0px -30% 0px",
+      rootMargin: "-15% 0px -30% 0px",
       threshold: 0.1,
     }
   );
@@ -70,7 +85,10 @@ function setupIntersectionObserver() {
 function observeExistingButtons() {
   const buttons = Array.from(document.querySelectorAll("button"));
   buttons.forEach((btn) => {
-    if (isMoreButton(btn)) intersectionObserver.observe(btn);
+    if (isClickableMoreButton(btn)) {
+      btn.setAttribute("data-linkedin-enhancer-observed", "true");
+      intersectionObserver.observe(btn);
+    }
   });
 }
 
@@ -82,7 +100,7 @@ function startScrollBasedScan() {
       if (intersectionObserver) {
         const buttons = Array.from(document.querySelectorAll("button"));
         buttons.forEach((btn) => {
-          if (isMoreButton(btn)) {
+          if (isClickableMoreButton(btn)) {
             const isObserved = btn.hasAttribute(
               "data-linkedin-enhancer-observed"
             );
@@ -100,6 +118,7 @@ function startScrollBasedScan() {
 async function initializeSmartExpander() {
   setupIntersectionObserver();
   startScrollBasedScan();
+  window.addEventListener("resize", scheduleDebugUpdate, { passive: true });
 }
 
 initializeSmartExpander();
